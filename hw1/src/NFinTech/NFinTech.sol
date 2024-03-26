@@ -76,7 +76,7 @@ contract NFinTech is IERC721 {
 
     function setApprovalForAll(address operator, bool approved) external {
         // TODO: please add your implementaiton here
-        require(msg.sender != operator, "ERC721: approve to caller");
+        require (operator != msg.sender && operator != address(0));
         _operatorApproval[msg.sender][operator] = approved;
         emit ApprovalForAll(msg.sender, operator, approved);
     }
@@ -88,12 +88,17 @@ contract NFinTech is IERC721 {
 
     function approve(address to, uint256 tokenId) external {
         // TODO: please add your implementaiton here
-        address owner = ownerOf(tokenId);
-        require(to != owner, "ERC721: approval to current owner");
-        require(msg.sender == owner || isApprovedForAll(owner, msg.sender), "ERC721: approve caller is not owner nor approved for all");
-
-        _tokenApproval[tokenId] = to;
-        emit Approval(owner, to, tokenId);
+        if (_owner[tokenId] == msg.sender) {
+            _tokenApproval[tokenId] = to;
+            emit Approval(msg.sender, to, tokenId);
+        } 
+        else if (_operatorApproval[_owner[tokenId]][msg.sender] == true) {
+            _tokenApproval[tokenId] = to;
+            emit Approval(_owner[tokenId], to, tokenId);
+        } 
+        else {
+            revert();
+        }
     }
 
     function getApproved(uint256 tokenId) public view returns (address operator) {
